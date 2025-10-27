@@ -23,6 +23,7 @@ data_filtered = drop_NA(sp_data)
 
 abs_mean_error = data_filtered[['SP_E1 [mm]', 'SP_E2 [mm]','SP_E3 [mm]']].abs().mean().mean()
 
+
 barWidth = 0.25
 fig = plt.subplots(figsize =(12, 8)) 
 
@@ -37,9 +38,9 @@ plt.bar(br2, data_filtered['SP2 [mm]'], color ='g', width = barWidth,
 plt.bar(br3, data_filtered['SP3 [mm]'], color ='b', width = barWidth, 
         edgecolor ='grey', label ='Ulna') 
 
-plt.errorbar(br1, data_filtered['SP1 [mm]'], yerr=abs_mean_error, fmt="o",color="brown")
-plt.errorbar(br2, data_filtered['SP2 [mm]'], yerr=abs_mean_error, fmt="o",color="brown")
-plt.errorbar(br3, data_filtered['SP3 [mm]'], yerr=abs_mean_error, fmt="o",color="brown")
+plt.errorbar(br1, data_filtered['SP1 [mm]'], yerr=abs_mean_error, fmt="o",color="k")
+plt.errorbar(br2, data_filtered['SP2 [mm]'], yerr=abs_mean_error, fmt="o",color="k")
+plt.errorbar(br3, data_filtered['SP3 [mm]'], yerr=abs_mean_error, fmt="o",color="k")
 plt.xlabel('Participant ID', fontsize = 15) 
 plt.ylabel('Soft Tissue Penetration [mm]', fontsize = 15) 
 plt.xticks([r + barWidth for r in range(len(data_filtered))], 

@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import matplotlib.patches as mpatches
 
 # drops all the rows which have NA in them
 def drop_NA(data):
@@ -9,17 +10,25 @@ def drop_NA(data):
     return data_filtered
 
 # Load CSV file
-data = pd.read_csv(r'C:\Users\drnil\OneDrive - ETH Zurich\ETH\Msc\Data_Analysis\data\Drill_User_Study - Test Group.csv', encoding='ISO-8859-1',na_values=["NA","","#DIV/0!"])
+data_robot = pd.read_csv(r'C:\Users\drnil\OneDrive - ETH Zurich\ETH\Msc\Data_Analysis\data\Drill_User_Study - Test Group.csv', encoding='ISO-8859-1',na_values=["NA","","#DIV/0!"])
+data_manual = pd.read_csv(r'C:\Users\drnil\OneDrive - ETH Zurich\ETH\Msc\Data_Analysis\data\Drill_User_Study - Control Group.csv', encoding='ISO-8859-1',na_values=["NA","","#DIV/0!"])
 
-sp_data = data[['ID','SP1 [mm]','SP2 [mm]','SP3 [mm]']]
+sp_data = data_robot[['ID','SP1 [mm]','SP2 [mm]','SP3 [mm]']]
+sp_data_manual = data_manual[['ID','SP1','SP2','SP3']]
 
 # filter the data with the desired strategy
 sp_data_filtered = drop_NA(sp_data)
+sp_data_filtered_manual = drop_NA(sp_data_manual)
 
 # get series per bone type for robotic assistance
 robot_generic = sp_data_filtered['SP1 [mm]']
+manual_generic = sp_data_filtered_manual['SP1']
+
 robot_femur   = sp_data_filtered['SP2 [mm]']
+manual_femur = sp_data_filtered_manual['SP2']
+
 robot_ulna   = sp_data_filtered['SP3 [mm]']
+manual_ulna = sp_data_filtered_manual['SP3']
 
 snb_values_experienced = np.array([
         4.7, 2.7, 9.3, 6.0, 12.0, 5.3, 2.7, 3.3, 3.0, 3.0,
@@ -31,54 +40,76 @@ snb_values_inexperienced = np.array([
         9.7, 8.0, 17.7, 4.0, 7.7, 3.0, 5.0
     ])
 
-fig, ax = plt.subplots(layout="constrained", figsize=(6,4))
+# --- Organize data ---
+data_robot = [robot_generic, robot_femur, robot_ulna]
+data_manual = [manual_generic, manual_femur, manual_ulna]
+bone_labels = ["Generic", "Femur", "Ulna"]
+bone_colors = {"Generic": "red", "Femur": "green", "Ulna": "blue"}
 
-bp = ax.boxplot(
-    [robot_generic, robot_femur, robot_ulna],
-    labels=["Generic", "Femur", "Ulna"],
-    patch_artist=True,          # allows coloring
-    widths=0.6,
-    showfliers=False,
+# --- Positioning using np.arange ---
+n_groups = len(data_robot)
+barWidth = 0.35
+br1 = np.arange(n_groups)
+br2 = br1 + barWidth
+
+fig, ax = plt.subplots(figsize=(8, 5), layout="constrained")
+
+# --- Manual boxplots (with hatching) ---
+bp_manual = ax.boxplot(
+    data_manual,
+    positions=br1,
+    widths=0.3,
+    patch_artist=True,
+    showfliers=False
 )
 
-# Colors + outlines
-colors = ["red", "green", "blue"]
-for patch, c in zip(bp["boxes"], colors):
-    patch.set_facecolor(c)
+# --- Robot boxplots (no hatching) ---
+bp_robot = ax.boxplot(
+    data_robot,
+    positions=br2,
+    widths=0.3,
+    patch_artist=True,
+    showfliers=False
+)
+
+# --- Apply color + hatching per bone type ---
+for patch, color in zip(bp_manual["boxes"], bone_colors.values()):
+    patch.set_facecolor(color)
+    patch.set_edgecolor("black")
+    patch.set_linewidth(1.2)
+    patch.set_hatch("//")  # hatching for manual group
+
+for patch, color in zip(bp_robot["boxes"], bone_colors.values()):
+    patch.set_facecolor(color)
     patch.set_edgecolor("black")
     patch.set_linewidth(1.2)
 
+# --- Style whiskers, caps, medians ---
 for k in ["whiskers", "caps", "medians"]:
-    for line in bp[k]:
+    for line in bp_manual[k] + bp_robot[k]:
         line.set_color("black")
         line.set_linewidth(1.2)
 
+# --- Labels & layout ---
+ax.set_xticks(br1 + barWidth / 2)
+ax.set_xticklabels(bone_labels)
 ax.set_ylabel("Penetration Depth [mm]")
-ax.set_title("Test Group Penetration Depth Comparison Bone Types")
+ax.set_title("Soft Tissue Penetration: Manual Control Laypeople vs Robotic Assistance Laypeople")
 ax.grid(axis="y", linestyle="--", linewidth=0.5, alpha=0.6)
-#ax.legend([bp["boxes"][0], bp["boxes"][1], bp["boxes"][2],bp["boxes"][3]], ["Manual Control (MC)", "Robotic Assistance", "MC Experienced Surgeons", "MC Inexperienced Surgeon"], loc="upper right")
 
-# Calculate median and standard deviation for each dataset
-data_sets = [robot_generic, robot_femur, robot_ulna]
+# --- Bone type legend (colors) ---
+bone_handles = [
+    mpatches.Patch(facecolor=color, edgecolor="black", label=bt)
+    for bt, color in bone_colors.items()
+]
+bone_legend = ax.legend(handles=bone_handles, title="Bone Type", loc='upper left', ncols=3)
+ax.add_artist(bone_legend)   # keep this legend when adding another
 
-legend_labels = []
-for dataset in data_sets:
-    median_val = np.median(dataset)
-    std_val = np.std(dataset)
-    legend_labels.append(f"x̃: {median_val:.1f} mm, σ: {std_val:.1f} mm")
-
-ax.legend([bp["boxes"][0], bp["boxes"][1], bp["boxes"][2]], 
-          legend_labels, loc="upper right")
-
-
-# print median and std for each bone type
-print("Mean, Median and Standard Deviation for each bone type:")
-for label, dataset in zip(["Generic", "Femur", "Tibia"], data_sets
-    ):
-    mean_val = np.mean(dataset)
-    median_val = np.median(dataset)
-    std_val = np.std(dataset)
-    print(f"{label}: Mean = {mean_val:.2f} mm, Median = {median_val:.2f} mm, Standard Deviation = {std_val:.2f} mm")
-
+# --- Control type legend (hatching) ---
+controller_handles = [
+    mpatches.Patch(facecolor="white", edgecolor="black", hatch="//", label="Manual Control"),
+    mpatches.Patch(facecolor="white", edgecolor="black", hatch="", label="Robotic Assistance")
+]
+ax.legend(handles=controller_handles, title="Control Type", loc='upper right')
 
 plt.show()
