@@ -81,4 +81,4 @@ for label, dataset in zip(["Generic", "Femur", "Tibia"], data_sets
     print(f"{label}: Mean = {mean_val:.2f} mm, Median = {median_val:.2f} mm, Standard Deviation = {std_val:.2f} mm")
 
 
-plt.show()
+plt.show()  

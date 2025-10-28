@@ -50,17 +50,23 @@ def welch_t_test(test_group, control_group):
         print(f"We fail to reject the null hypothesis (p >= {alpha})")
         print("There is no significant difference between the two groups")
 
+# drops all the rows which have NA in them
+def drop_NA(data):
+    data_filtered = data.dropna().reset_index(drop=True)
+    return data_filtered
 
 # Load CSV file
-data = pd.read_csv('Data/Drill_User_Study_Adapted_sheet.csv', encoding='ISO-8859-1')
+data = pd.read_csv(r'C:\Users\drnil\OneDrive - ETH Zurich\ETH\Msc\Data_Analysis\data\Drill_User_Study - Test Group.csv', encoding='ISO-8859-1',na_values=["NA","","#DIV/0!"])
 
-# print("All column names:")
-# print(data.columns.tolist())
-# Get series per controller
-manual = data.loc[data['Controller Activated']==0, 'Max_orientation_error [Â°]'].dropna()
-robot  = data.loc[data['Controller Activated']==1, 'Max_orientation_error [Â°]'].dropna()
+sp_data = data[['ID','SP1 [mm]','SP2 [mm]','SP3 [mm]']]
 
-robot_no_outliers = robot[(robot - np.median(robot)).abs() <= 1.5 * np.std(robot)]
+# filter the data with the desired strategy
+sp_data_filtered = drop_NA(sp_data)
+
+# get series per bone type for robotic assistance
+robot_generic = sp_data_filtered['SP1 [mm]']
+robot_femur   = sp_data_filtered['SP2 [mm]']
+robot_ulna   = sp_data_filtered['SP3 [mm]']
 
 snb_values_experienced = np.array([
         4.7, 2.7, 9.3, 6.0, 12.0, 5.3, 2.7, 3.3, 3.0, 3.0,
@@ -76,8 +82,8 @@ snb_values_inexperienced = np.array([
 test = "welch"  # options: "one-sided", "welch"
 
 if test == "one-sided":
-    one_sided_t_test(robot, manual)
+    one_sided_t_test(robot_generic, snb_values_experienced)
 elif test == "welch":
-    welch_t_test(robot_no_outliers, manual)
+    welch_t_test(robot_generic, snb_values_experienced)
 else:
     print("Invalid test type. Please choose 'one-sided' or 'welch'.")

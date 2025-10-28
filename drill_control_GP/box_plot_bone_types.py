@@ -14,7 +14,7 @@ data_robot = pd.read_csv(r'C:\Users\drnil\OneDrive - ETH Zurich\ETH\Msc\Data_Ana
 data_manual = pd.read_csv(r'C:\Users\drnil\OneDrive - ETH Zurich\ETH\Msc\Data_Analysis\data\Drill_User_Study - Control Group.csv', encoding='ISO-8859-1',na_values=["NA","","#DIV/0!"])
 
 sp_data = data_robot[['ID','SP1 [mm]','SP2 [mm]','SP3 [mm]']]
-sp_data_manual = data_manual[['ID','SP1','SP2','SP3']]
+sp_data_manual = data_manual[['ID','SP1 [mm]','SP2 [mm]','SP3 [mm]']]
 
 # filter the data with the desired strategy
 sp_data_filtered = drop_NA(sp_data)
@@ -22,13 +22,13 @@ sp_data_filtered_manual = drop_NA(sp_data_manual)
 
 # get series per bone type for robotic assistance
 robot_generic = sp_data_filtered['SP1 [mm]']
-manual_generic = sp_data_filtered_manual['SP1']
+manual_generic = sp_data_filtered_manual['SP1 [mm]']
 
 robot_femur   = sp_data_filtered['SP2 [mm]']
-manual_femur = sp_data_filtered_manual['SP2']
+manual_femur = sp_data_filtered_manual['SP2 [mm]']
 
 robot_ulna   = sp_data_filtered['SP3 [mm]']
-manual_ulna = sp_data_filtered_manual['SP3']
+manual_ulna = sp_data_filtered_manual['SP3 [mm]']
 
 snb_values_experienced = np.array([
         4.7, 2.7, 9.3, 6.0, 12.0, 5.3, 2.7, 3.3, 3.0, 3.0,
