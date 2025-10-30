@@ -50,7 +50,7 @@ bp = ax.boxplot(
 )
 
 # Colors + outlines
-colors = ["blue","red", "orange", "purple"]
+colors = ["blue","red", "lightgrey", "dimgrey"]
 for patch, c in zip(bp["boxes"], colors):
     patch.set_facecolor(c)
     patch.set_edgecolor("black")
@@ -89,4 +89,7 @@ for label, dataset in zip(["Manual Control Laypeople","Robotic Assisted Laypeopl
     print(f"{label}: Mean = {mean_val:.2f} mm, Median = {median_val:.2f} mm, Standard Deviation = {std_val:.2f} mm")
 
 
-plt.show()
+#plt.show()
+
+print(robot_generic)
+print(np.std(robot_generic))

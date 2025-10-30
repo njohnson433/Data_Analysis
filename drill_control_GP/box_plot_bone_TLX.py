@@ -10,25 +10,11 @@ def drop_NA(data):
     return data_filtered
 
 # Load CSV file
-data_robot = pd.read_csv(r'C:\Users\drnil\OneDrive - ETH Zurich\ETH\Msc\Data_Analysis\data\Drill_User_Study - Test Group.csv', encoding='ISO-8859-1',na_values=["NA","","#DIV/0!"])
-data_manual = pd.read_csv(r'C:\Users\drnil\OneDrive - ETH Zurich\ETH\Msc\Data_Analysis\data\Drill_User_Study - Control Group.csv', encoding='ISO-8859-1',na_values=["NA","","#DIV/0!"])
+data_robot = pd.read_csv(r'C:\Users\drnil\OneDrive - ETH Zurich\ETH\Msc\Data_Analysis\data\Drill_User_Study - Robot TLX Scores.csv', encoding='ISO-8859-1',na_values=["NA","","#DIV/0!"])
+data_manual = pd.read_csv(r'C:\Users\drnil\OneDrive - ETH Zurich\ETH\Msc\Data_Analysis\data\Drill_User_Study - Manual TLX scores .csv', encoding='ISO-8859-1',na_values=["NA","","#DIV/0!"])
 
-sp_data = data_robot[['ID','SP1 [mm]','SP2 [mm]','SP3 [mm]']]
-sp_data_manual = data_manual[['ID','SP1 [mm]','SP2 [mm]','SP3 [mm]']]
-
-# filter the data with the desired strategy
-sp_data_filtered = drop_NA(sp_data)
-sp_data_filtered_manual = drop_NA(sp_data_manual)
-
-# get series per bone type for robotic assistance
-robot_generic = sp_data_filtered['SP1 [mm]']
-manual_generic = sp_data_filtered_manual['SP1 [mm]']
-
-robot_femur   = sp_data_filtered['SP2 [mm]']
-manual_femur = sp_data_filtered_manual['SP2 [mm]']
-
-robot_ulna   = sp_data_filtered['SP3 [mm]']
-manual_ulna = sp_data_filtered_manual['SP3 [mm]']
+data_robot_tlx = data_robot[['Mental Demand','Physical Demand','Temporal Demand','Performance','Effort','Frustration']]
+data_manual_tlx = data_manual[['Mental Demand','Physical Demand','Temporal Demand','Performance','Effort','Frustration']]
 
 snb_values_experienced = np.array([
         4.7, 2.7, 9.3, 6.0, 12.0, 5.3, 2.7, 3.3, 3.0, 3.0,
@@ -41,22 +27,23 @@ snb_values_inexperienced = np.array([
     ])
 
 # --- Organize data ---
-data_robot = [robot_generic, robot_femur, robot_ulna]
-data_manual = [manual_generic, manual_femur, manual_ulna]
-bone_labels = ["Generic", "Femur", "Ulna"]
-bone_colors = {"Generic": "red", "Femur": "green", "Ulna": "blue"}
+tlx_labels = ['Mental Demand','Physical Demand','Temporal Demand','Performance','Effort','Frustration']
+bone_colors = {"Mental Demand": "red", "Physical Demand": "green", "Temporal Demand": "blue", "Performance": "orange", "Effort": "purple", "Frustration": "cyan"}
 
 # --- Positioning using np.arange ---
-n_groups = len(data_robot)
+n_groups = len(tlx_labels)   # NOT len(data_robot_tlx)
 barWidth = 0.35
 br1 = np.arange(n_groups)
 br2 = br1 + barWidth
 
 fig, ax = plt.subplots(figsize=(8, 5), layout="constrained")
 
+robot_tlx_list  = [data_robot_tlx[c]  for c in tlx_labels]
+manual_tlx_list = [data_manual_tlx[c] for c in tlx_labels]
+
 # --- Manual boxplots (with hatching) ---
 bp_manual = ax.boxplot(
-    data_manual,
+    manual_tlx_list,
     positions=br1,
     widths=0.3,
     patch_artist=True,
@@ -65,7 +52,7 @@ bp_manual = ax.boxplot(
 
 # --- Robot boxplots (no hatching) ---
 bp_robot = ax.boxplot(
-    data_robot,
+    robot_tlx_list,
     positions=br2,
     widths=0.3,
     patch_artist=True,
@@ -92,9 +79,9 @@ for k in ["whiskers", "caps", "medians"]:
 
 # --- Labels & layout ---
 ax.set_xticks(br1 + barWidth / 2)
-ax.set_xticklabels(bone_labels)
-ax.set_ylabel("Penetration Depth [mm]")
-ax.set_title("Soft Tissue Penetration: Manual Control Laypeople vs Robotic Assistance Laypeople")
+ax.set_xticklabels(tlx_labels)
+ax.set_ylabel("TLX Score")
+ax.set_title("NASA TLX Scores: Manual vs Robotic Assistance")
 ax.grid(axis="y", linestyle="--", linewidth=0.5, alpha=0.6)
 
 # --- Bone type legend (colors) ---
@@ -102,7 +89,7 @@ bone_handles = [
     mpatches.Patch(facecolor=color, edgecolor="black", label=bt)
     for bt, color in bone_colors.items()
 ]
-bone_legend = ax.legend(handles=bone_handles, title="Bone Type", loc='upper left', ncols=3)
+bone_legend = ax.legend(handles=bone_handles, title="Test Category", loc='upper left', ncols=3)
 ax.add_artist(bone_legend)   # keep this legend when adding another
 
 # --- Control type legend (hatching) ---
@@ -113,14 +100,12 @@ controller_handles = [
 ax.legend(handles=controller_handles, title="Control Type", loc='upper right')
 
 
-# print median and std for each bone type
-print("\n--- Manual group ---")
-for label, ds in zip(bone_labels, data_manual):
-    print(f"{label:8s} | mean = {np.mean(ds):6.2f}  std = {np.std(ds, ddof=1):6.2f}")
+print("\n--- Manual group (TLX) ---")
+for label, ds in zip(tlx_labels, manual_tlx_list):
+    print(f"{label:20s} | mean = {np.mean(ds):6.2f}  std = {np.std(ds, ddof=1):6.2f}")
 
-print("\n--- Robotic group ---")
-for label, ds in zip(bone_labels, data_robot):
-    print(f"{label:8s} | mean = {np.mean(ds):6.2f}  std = {np.std(ds, ddof=1):6.2f}")
-
+print("\n--- Robotic group (TLX) ---")
+for label, ds in zip(tlx_labels, robot_tlx_list):
+    print(f"{label:20s} | mean = {np.mean(ds):6.2f}  std = {np.std(ds, ddof=1):6.2f}")
 
 plt.show()
